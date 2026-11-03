@@ -1,0 +1,14 @@
+INFO: [SIM 2] *************** CSIM start ***************
+INFO: [SIM 4] CSIM will launch GCC as the compiler.
+   Compiling ../../../fir_test.cpp in debug mode
+   Compiling ../../../fir.cpp in debug mode
+   Generating csim.exe
+
+===== FIR AXI Stream Comparison Report =====
+Samples compared: 1000
+Max absolute error: 6.13928e-006
+Mean absolute error: 3.01009e-006
+Failed checks: 0
+TEST PASS!
+INFO: [SIM 1] CSim done with 0 errors.
+INFO: [SIM 3] *************** CSIM finish ***************

@@ -1,0 +1,161 @@
+============================================================
+FIR 性能测试 原始 XSCT 输出（从 2026-10-24 会话记录逐字恢复）
+来源: C://Users//pig22//.workbuddy//projects///n      c-Users-pig22-WorkBuddy-2026-10-24-18-03-05\
+      2794d4b3-b947-42eb-91f6-76af6135f472.jsonl
+恢复时间: 2026-10-27    未做任何数值修改
+============================================================
+
+【一】ARM 软件 FIR 板测变量读取（board_test.tcl，10-24 18:31，XSCT mrd 原始输出）
+------------------------------------------------------------
+section, .mmu_tbl: 0x0010c000 - 0x0010ffff
+	section, .init_array: 0x00110000 - 0x00110003
+	section, .fini_array: 0x00110004 - 0x00110007
+	section, .bss: 0x00110040 - 0x001149e7
+	section, .heap: 0x001149e8 - 0x001169ef
+	section, .stack: 0x001169f0 - 0x0011a1ef
+  0%    0MB   0.0MB/s  ??:?? ETA100%    0MB   0.2MB/s  00:00    
+Setting PC to Program Start Address 0x00100000
+Successfully downloaded D:/fp_perf_build/fir_test.elf
+=== RUN ===
+=== STATE AFTER 5s ===
+Running
+=== STOPPED STATE ===
+Stopped: (Suspended)
+=== READ VARIABLES ===
+test_status      :   112760:   00000004
+
+completed_samples:   112764:   000003E8
+
+sw_sine_cycles   :   1146B8:   000C91A8
+  1146BC:   00000000
+
+sw_mixed_cycles  :   1146C0:   000C8E7A
+  1146C4:   00000000
+
+sw_sine_us       :   1146C8:   E2207CC2
+  1146CC:   40A34E51
+
+sw_mixed_us      :   1146D0:   944FEB6A
+  1146D4:   40A3496F
+
+sw_sine_checksum :   1146D8:   404A636B
+
+sw_mixed_checksum:   1146DC:   40AF947F
+
+sw_sine_out0     :   1146E0:   00000000
+
+sw_mixed_out0    :   1146E4:   00000000
+
+=== DONE ===
+
+Stderr: (empty)
+Exit Code: 0
+Signal: (none)
+
+【二】FPGA+DMA 板测·带断点运行（board_test2.tcl，10-24 19:39；注意 hw_mixed 组被断点停顿污染，仅数据导出有效）
+------------------------------------------------------------
+section, .eh_frame: 0x00109d18 - 0x00109d1b
+	section, .mmu_tbl: 0x0010c000 - 0x0010ffff
+	section, .init_array: 0x00110000 - 0x00110003
+	section, .fini_array: 0x00110004 - 0x00110007
+	section, .bss: 0x00110040 - 0x00114a07
+	section, .heap: 0x00114a08 - 0x00116a0f
+	section, .stack: 0x00116a10 - 0x0011a20f
+  0%    0MB   0.0MB/s  ??:?? ETA100%    0MB   0.2MB/s  00:00    
+Setting PC to Program Start Address 0x00100000
+Successfully downloaded D:/fp_perf_build/fir_test.elf
+=== SET BREAKPOINT at second hw_fir_run call (0x100A48) ===
+=== RUN ===
+=== STATE (expect Stopped at breakpoint) ===
+Stopped: (Breakpoint)
+=== DUMP RxBuffer #1 (sine output) ===
+sine dump written, 1000 words
+=== RESUME ===
+=== STATE AFTER RUN ===
+Running
+=== DUMP RxBuffer #2 (mixed output) ===
+mixed dump written, 1000 words
+=== READ VARIABLES ===
+test_status      :   112760:   00000004
+
+completed_samples:   112764:   000003E8
+
+hw_sine_cycles   :   1146E8:   00007D99
+  1146EC:   00000000
+
+hw_sine_us       :   1146F8:   35CDA053
+  1146FC:   40581D60
+
+hw_mixed_cycles  :   1146F0:   2912A82B
+  1146F4:   00000000
+
+hw_mixed_us      :   114700:   9AE482C1
+  114704:   413F8B41
+
+sw_sine_us       :   1146C8:   9242FBC8
+  1146CC:   40A34AC4
+
+sw_mixed_us      :   1146D0:   A6BE8179
+  1146D4:   40A34972
+
+=== DONE ===
+
+Stderr: (empty)
+Exit Code: 0
+Signal: (none)
+
+【三】FPGA+DMA 板测·干净运行（board_test3.tcl，10-24 19:40，最终有效计时）
+------------------------------------------------------------
+mixed clean dump written, 1000 words
+=== READ VARIABLES (clean) ===
+test_status      :   112760:   00000004
+
+completed_samples:   112764:   000003E8
+
+hw_sine_cycles   :   1146E8:   00007D6B
+  1146EC:   00000000
+
+hw_sine_us       :   1146F8:   37DE361D
+  1146FC:   4058148B
+
+hw_mixed_cycles  :   1146F0:   00007C48
+  1146F4:   00000000
+
+hw_mixed_us      :   114700:   FC950B16
+  114704:   4057DCAB
+
+sw_sine_us       :   1146C8:   D9F11F35
+  1146CC:   40A34AA5
+
+sw_mixed_us      :   1146D0:   D3CCDE37
+  1146D4:   40A34964
+
+=== DONE ===
+
+Stderr: (empty)
+Exit Code: 0
+Signal: (none)
+
+【四】对照说明
+------------------------------------------------------------
+hw_sine_cycles = 0x00007D6B = 32107 -> 96.3210 us (COUNTS_PER_SECOND=333333343)
+hw_mixed_cycles = 0x00007C48 = 31816 -> 95.4480 us
+sw_sine_cycles = 0x000C91A8 = 823720 -> 2469.3239 us (本次读取自【一】)
+sw_mixed_cycles = 0x000C8E7A = 822906 -> 2468.6969 us
+test_status=4, completed_samples=0x3E8=1000
+原始 1000 点输出数据: D://fp_perf_build//sine_dump.txt / mixed_dump_clean.txt
+已导出 bin: D://FpGA备份//V1.0成果保存//fir_sine_fpga_perf_1000.bin / fir_mixed_fpga_perf_1000.bin
+
+【五】勘误注记（2026-11-03 追加；原始读取记录【一】~【四】未改动一字）
+------------------------------------------------------------
+1. 本文件【四】中 "sw_sine_cycles = 0x000C91A8 = 823720 -> 2469.3239 us" 一行为**配对错误**：
+   823,720 计数来自【一】(10-24 18:31) 那次运行，该次 sw_sine_us 的 64 位双精度内存值
+   0x40A34E51_E2207CC2 解码 = 2471.1599 us（与 823,720 计数自洽）；
+   而 2469.3239 us 是【三】(19:40) 及报告图12截图对应运行（823,108 计数）的值。
+   即：2471.1599 与 2469.3239 是**两次不同运行**的结果，此前文档误将两次运行的计数与微秒混配。
+2. 最终提交采用【图12截图对应运行】的完整数据（8 变量同屏、内部自洽）：
+   hw_sine 32,096 -> 96.2880 us；hw_mixed 31,837 -> 95.5110 us
+   sw_sine 823,108 -> 2469.3239 us；sw_mixed 822,907 -> 2468.7209 us
+   对照比：正弦 25.64 倍、混频 25.85 倍。
+3. 【三】(96.3210/95.4480 us) 与【一】(2471.1599 us) 均为真实独立运行记录，保留作一致性验证。
+4. 本文件恢复自会话记录，【一】~【四】的读取输出未做任何数值修改。
